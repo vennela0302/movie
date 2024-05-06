@@ -60,7 +60,7 @@ app.get("/movies/:movieId/", async (req, res) => {
   const { movieId } = req.params;
   const getMovieQuery = `
     SELECT * FROM movie WHERE movie_id = ${movieId};`;
-  const getMovie = await db.get(getMovieQuery);
+  const getMovie = await db.run(getMovieQuery);
   res.send(getMovie);
 });
 
@@ -79,6 +79,49 @@ app.put("/movies/:movieId/", async (req, res) => {
     `;
   const getMovie = await db.run(updateMovieDetails);
   res.send("Movie Details Updated");
+});
+
+// API 5
+
+app.delete("/movies/:movieId/", async (req, res) => {
+  const { movieId } = req.params;
+  const deleteMovieQuery = `
+    DELETE FROM movie WHERE movie_id = ${movieId}`;
+
+  await db.run(deleteMovieQuery);
+  res.send("Movie Removed");
+});
+
+// API 6
+
+app.get("/directors/", async (req, res) => {
+  const getDirectorsQuery = `
+    SELECT * FROM director`;
+  const convertDBtoResponse = (dbObject) => {
+    return {
+      directorId: dbObject.director_id,
+      directorName: dbObject.director_name,
+    };
+  };
+  const getDirResult = await db.all(getDirectorsQuery);
+  res.send(getDirResult.map((eachObject) => convertDBtoResponse(eachObject)));
+});
+
+// API 7
+
+app.get("/directors/:directorId/movies/", async (req, res) => {
+  const { directorId } = req.params;
+  const getMovieByDirector = `
+SELECT movie_name
+FROM movie 
+NATURAL JOIN director
+WHERE director_id = ${directorId}
+`;
+  const convertDBtoResponse = (dbObject) => {
+    return { movieName: dbObject.movie_name };
+  };
+  const getMovieName = await db.all(getMovieByDirector);
+  res.send(getMovieName.map((eachPlayer) => convertDBtoResponse(eachPlayer)));
 });
 
 module.exports = app;
